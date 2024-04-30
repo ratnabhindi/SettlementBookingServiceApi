@@ -13,5 +13,6 @@ namespace Domain.Interfaces
         public Task<IEnumerable<Booking>> GetAllBookingsAsync();
         Task<Booking> AddBookingAsync(Booking booking);
         Task<bool> IsBookingAvailableAsync(DateTime bookingTime);
+        public Task<int> GetBookingsCountAsync(DateTime bookingTime);
     }
 }

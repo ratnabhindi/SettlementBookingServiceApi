@@ -4,31 +4,31 @@ using Domain.Models;
 using Microsoft.Extensions.Options;
 using Services.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Services.Implementations
 {
-    public class BookingService : IBookingService
+    public class BookingService(IBookingRepository bookingRepository, IOptions<BookingOptions> bookingOptions) : IBookingService
     {
-        private readonly IBookingRepository _bookingRepository;
-        private readonly BookingOptions _bookingOptions;
+        private readonly IBookingRepository _bookingRepository = bookingRepository;
+        private readonly BookingOptions _bookingOptions = bookingOptions?.Value;
 
-        public BookingService(IOptions<BookingOptions> bookingOptions)
+        public async Task<Booking> AddBookingAsync(Booking booking)
         {
-            _bookingOptions = bookingOptions.Value;
+            if (booking == null || string.IsNullOrWhiteSpace(booking.Name) || !await IsTimeSlotAvailableAsync(booking.BookingTime))
+            {
+                throw new ArgumentException("Invalid booking details or time slot not available.");
+            }
+
+            booking.Id = Guid.NewGuid();
+            await _bookingRepository.AddBookingAsync(booking);
+            return booking;
         }
-        public Task<Booking> AddBookingAsync(Booking booking)
-        {
 
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> IsTimeSlotAvailableAsync(DateTime bookingTime)
+        public async Task<bool> IsTimeSlotAvailableAsync(DateTime bookingTime)
         {
-            throw new NotImplementedException();
+            int bookingsAtThisTime = await _bookingRepository.GetBookingsCountAsync(bookingTime);
+            return bookingsAtThisTime < _bookingOptions.MaxSimultaneousBookings;
         }
     }
 }
