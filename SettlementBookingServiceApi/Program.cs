@@ -1,11 +1,15 @@
 using Configurations;
+using Domain.Interfaces;
+using Infrastructure.Repositories;
+using Services.Implementations;
 using Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.Configure<BookingOptions>(builder.Configuration.GetSection("BookingOptions"));
-builder.Services.AddSingleton<IBookingService, Services.Implementations.BookingService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddSingleton<IBookingRepository, BookingRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

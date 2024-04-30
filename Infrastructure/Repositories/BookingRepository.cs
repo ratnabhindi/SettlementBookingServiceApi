@@ -14,28 +14,28 @@ namespace Infrastructure.Repositories
 
         public Task<Booking> AddBookingAsync(Booking booking)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<Booking>> GetAllBookingsAsync()
-        {
-            throw new NotImplementedException();
+            _bookings.Add(booking);
+            return Task.FromResult(booking);
         }
 
         public Task<Booking> GetBookingByIdAsync(Guid bookingId)
         {
-            Booking booking = _bookings.FirstOrDefault(b =>b.Id == bookingId);
+            Booking booking = _bookings.FirstOrDefault(b => b.Id == bookingId);
             return Task.FromResult(booking);
         }
 
-        public Task<bool> IsBookingAvailableAsync(DateTime bookingTime)
+        public Task<int> GetBookingsCountAsync(DateTime bookingTime)
         {
-            throw new NotImplementedException();
+
+            int count = _bookings.Count(b => b.BookingTime == bookingTime);
+            return Task.FromResult(count);
+
         }
 
-        Task<IEnumerable<Booking>> IBookingRepository.GetAllBookingsAsync()
+        public Task<IEnumerable<Booking>> GetAllBookingsAsync()
         {
-            throw new NotImplementedException();
-        }
+            return Task.FromResult<IEnumerable<Booking>>(_bookings);
+        }       
+
     }
 }

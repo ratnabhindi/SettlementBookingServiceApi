@@ -8,10 +8,16 @@ using System.Threading.Tasks;
 
 namespace Services.Implementations
 {
-    public class BookingService(IBookingRepository bookingRepository, IOptions<BookingOptions> bookingOptions) : IBookingService
+    public class BookingService : IBookingService
     {
-        private readonly IBookingRepository _bookingRepository = bookingRepository;
-        private readonly BookingOptions _bookingOptions = bookingOptions?.Value;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly BookingOptions _bookingOptions;
+
+        public BookingService(IBookingRepository bookingRepository, IOptions<BookingOptions> bookingOptions)
+        {
+            _bookingRepository = bookingRepository;
+            _bookingOptions = bookingOptions.Value ;
+        }
 
         public async Task<Booking> AddBookingAsync(Booking booking)
         {
