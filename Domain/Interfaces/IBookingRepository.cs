@@ -10,7 +10,8 @@ namespace Domain.Interfaces
     public interface IBookingRepository
     {
         Task<Booking> GetBookingByIdAsync(Guid bookingId);
-        Task<List<Booking>> GetAllBookingsAsync();
+        public Task<IEnumerable<Booking>> GetAllBookingsAsync();
         Task<Booking> AddBookingAsync(Booking booking);
+        Task<bool> IsBookingAvailableAsync(DateTime bookingTime);
     }
 }
