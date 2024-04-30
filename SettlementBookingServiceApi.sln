@@ -6,6 +6,12 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApi", "SettlementBookingServiceApi\WebApi.csproj", "{D9F7A6DA-5D8B-45DE-937A-FB876CDF4ACD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A797EE2D-DACC-4C8A-ADEB-7B6C8A6F06A2}"
+	ProjectSection(SolutionItems) = preProject
+		SettlementBookingServiceApi\appsettings.Development.json = SettlementBookingServiceApi\appsettings.Development.json
+		SettlementBookingServiceApi\appsettings.json = SettlementBookingServiceApi\appsettings.json
+		SettlementBookingServiceApi\Program.cs = SettlementBookingServiceApi\Program.cs
+		SettlementBookingServiceApi\WebApi.http = SettlementBookingServiceApi\WebApi.http
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A1EBE12F-292A-4EAB-89E3-BD6013133646}"
 EndProject
