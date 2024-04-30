@@ -1,8 +1,10 @@
+using Configurations;
 using Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.Configure<BookingOptions>(builder.Configuration.GetSection("BookingOptions"));
 builder.Services.AddSingleton<IBookingService, Services.Implementations.BookingService>();
 
 builder.Services.AddControllers();
