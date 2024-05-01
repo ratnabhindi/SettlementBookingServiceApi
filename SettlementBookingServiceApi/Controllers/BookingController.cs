@@ -10,16 +10,10 @@ namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingController : ControllerBase
+    public class BookingController(IBookingService bookingService, IOptions<BookingOptions> bookingOptions) : ControllerBase
     {
-        private readonly IBookingService _bookingService;
-        private readonly BookingOptions _bookingOptions;
-
-        public BookingController(IBookingService bookingService, IOptions<BookingOptions> bookingOptions)
-        {
-            _bookingService = bookingService;
-            _bookingOptions = bookingOptions.Value;
-        }
+        private readonly IBookingService _bookingService = bookingService;
+        private readonly BookingOptions _bookingOptions = bookingOptions.Value;
 
         [HttpPost]
         public async Task<IActionResult> CreateBookingAsync([FromBody] BookingRequest request)
@@ -82,8 +76,10 @@ namespace WebApi.Controllers
         }
 
         private bool IsBookingTimeValid(DateTime time)
-        {
-            return time.TimeOfDay >= _bookingOptions.StartHour && time.TimeOfDay < _bookingOptions.EndHour;
+        {        
+            TimeSpan lastValidStartTime = _bookingOptions.EndHour - _bookingOptions.BookingDuration;
+            return time.TimeOfDay >= _bookingOptions.StartHour && time.TimeOfDay <= lastValidStartTime;
         }
+      
     }
 }
