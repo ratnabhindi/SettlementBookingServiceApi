@@ -11,18 +11,11 @@ namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingController : ControllerBase
+    public class BookingController(IBookingService bookingService, IOptions<BookingOptions> bookingOptions, ILogger<BookingController> logger) : ControllerBase
     {
-        private readonly IBookingService _bookingService;
-        private readonly BookingOptions _bookingOptions;
-        private readonly ILogger<BookingController> _logger;
-
-        public BookingController(IBookingService bookingService, IOptions<BookingOptions> bookingOptions, ILogger<BookingController> logger)
-        {
-            _bookingService = bookingService;
-            _bookingOptions = bookingOptions.Value;
-            _logger = logger;
-        }
+        private readonly IBookingService _bookingService = bookingService;
+        private readonly BookingOptions _bookingOptions = bookingOptions.Value;
+        private readonly ILogger<BookingController> _logger = logger;
 
         [HttpPost]
         public async Task<IActionResult> CreateBookingAsync([FromBody] BookingRequest request)
