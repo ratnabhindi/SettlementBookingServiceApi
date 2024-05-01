@@ -11,6 +11,7 @@ namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [ApiVersion("1.0")]
     public class BookingController(IBookingService bookingService, IBookingOptionsService bookingOptionsService, IApiLogger<BookingController> logger) : ControllerBase
     {
         private readonly IBookingService _bookingService = bookingService;
@@ -18,6 +19,7 @@ namespace WebApi.Controllers
         private readonly IApiLogger<BookingController> _logger = logger;
 
         [HttpPost]
+        [MapToApiVersion("1.0")]
         public async Task<IActionResult> CreateBookingAsync([FromBody] BookingRequest request)
         {
             _logger.LogInformation("Received booking request.");
