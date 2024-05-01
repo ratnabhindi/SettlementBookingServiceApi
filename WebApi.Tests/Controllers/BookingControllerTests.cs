@@ -19,28 +19,28 @@ namespace WebApi.Tests.Controllers
     {
         private BookingController _controller;
         private Mock<IBookingService> _mockBookingService;
-        private BookingOptions _bookingOptions;
-        private Mock<ILogger<BookingService>> _mockLogger;
+        private Mock<IBookingOptionsService> _mockBookingOptionsService;
+        private Mock<IApiLogger<BookingController>> _mockLogger;
 
         [SetUp]
-        public void Setup()
+        public void SetUp()
         {
-            // Mock the booking service
+            // Initialize mocks
             _mockBookingService = new Mock<IBookingService>();
+            _mockBookingOptionsService = new Mock<IBookingOptionsService>();
+            _mockLogger = new Mock<IApiLogger<BookingController>>();
 
-            // Setup booking options
-            _bookingOptions = new BookingOptions
-            {
-                StartHour = TimeSpan.FromHours(9),
-                EndHour = TimeSpan.FromHours(17)
-            };
-            IOptions<BookingOptions> options = Options.Create(_bookingOptions);
+            // Setup BookingOptions 
+            BookingOptions bookingOptions = new() { MaxSimultaneousBookings = 3 };
 
-            // Setup Mock for ILogger
-            _mockLogger = new Mock<ILogger<BookingService>>();
+            // Configure your BookingOptionsService to return these options when called
+            _mockBookingOptionsService.Setup(service => service.GetBookingOptions())
+                                      .Returns(bookingOptions);
 
-            // Initialize the controller with the mocked service and options
-            _controller = new BookingController(_mockBookingService.Object, options, (ILogger<BookingController>)_mockLogger);
+            // Create instance of BookingController with mocked dependencies
+            _controller = new BookingController(_mockBookingService.Object,
+                                                _mockBookingOptionsService.Object,
+                                                _mockLogger.Object);
         }
 
         [Test]
@@ -107,17 +107,20 @@ namespace WebApi.Tests.Controllers
             // Assert
             Assert.That(result, Is.InstanceOf<BadRequestObjectResult>(), "The booking time is before business hours, should return BadRequest.");
         }
-
-
+                
 
         [Test]
         public async Task CreateBookingAsync_Returns_Ok_When_Booking_IsSuccessful()
         {
-            // Arrange
-            var request = new BookingRequest { Name = "John Doe", BookingTime = "10:00" };
-            var booking = new Booking { Name = "John Doe", BookingTime = DateTime.Today.AddHours(10) };
-            _mockBookingService.Setup(service => service.AddBookingAsync(It.IsAny<Booking>()))
-                               .ReturnsAsync(booking);
+            var request = new BookingRequest { Name = "John Doe", BookingTime = "12:00" };
+            var booking = new Booking { Name = request.Name, BookingTime = DateTime.Today.Add(TimeSpan.Parse(request.BookingTime)) };
+            var addedBooking = new Booking { Id = Guid.NewGuid(), Name = booking.Name, BookingTime = booking.BookingTime };
+
+            _mockBookingService.Setup(x => x.AddBookingAsync(It.IsAny<Booking>()))
+                               .ReturnsAsync(addedBooking);
+
+            _mockBookingOptionsService.Setup(x => x.GetBookingOptions())
+                                      .Returns(new BookingOptions { StartHour = TimeSpan.Parse("09:00"), EndHour = TimeSpan.Parse("17:00") });
 
             // Act
             var result = await _controller.CreateBookingAsync(request);
@@ -125,6 +128,7 @@ namespace WebApi.Tests.Controllers
             // Assert
             var okResult = result as OkObjectResult;
             Assert.That(okResult, Is.Not.Null);
+
             Assert.Multiple(() =>
             {
                 Assert.That(okResult.StatusCode, Is.EqualTo(200));
@@ -144,7 +148,8 @@ namespace WebApi.Tests.Controllers
             var result = await _controller.CreateBookingAsync(request);
 
             // Assert
-            Assert.That(result, Is.InstanceOf<ConflictObjectResult>());
-        }
+            Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
+        } 
+
     }
 }

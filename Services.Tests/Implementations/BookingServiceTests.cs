@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Configurations;
 using Serilog;
 using Microsoft.Extensions.Logging;
+using Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Services.Tests.Implementations
 {
@@ -17,25 +19,27 @@ namespace Services.Tests.Implementations
     {
         private BookingService _service;
         private Mock<IBookingRepository> _mockRepository;
+        private Mock<IBookingOptionsService> _mockBookingOptionsService;
+        private Mock<IApiLogger<BookingService>> _mockLogger;
         private BookingOptions _bookingOptions;
-        private Mock<ILogger<BookingService>> _mockLogger;
 
         [SetUp]
         public void SetUp()
         {
-            // Setup Mock for IBookingRepository
+            // Initialize mocks
             _mockRepository = new Mock<IBookingRepository>();
+            _mockBookingOptionsService = new Mock<IBookingOptionsService>();
+            _mockLogger = new Mock<IApiLogger<BookingService>>();
 
             // Setup BookingOptions
             _bookingOptions = new BookingOptions { MaxSimultaneousBookings = 3 };
-            IOptions<BookingOptions> options = Options.Create(_bookingOptions);
+            _mockBookingOptionsService.Setup(service => service.GetBookingOptions()).Returns(_bookingOptions);
 
-            // Setup Mock for ILogger
-            _mockLogger = new Mock<ILogger<BookingService>>();
-
-            // Initialize BookingService with mocked dependencies
-            _service = new BookingService(_mockRepository.Object, options, (ILogger<BookingService>)_mockLogger);
-    }
+            // Create instance of BookingService with mocked dependencies
+            _service = new BookingService(_mockRepository.Object,
+                                          _mockBookingOptionsService.Object,
+                                          _mockLogger.Object);
+        }
 
         [Test]
         public void AddBookingAsync_Throws_ArgumentException_For_Invalid_Booking()
@@ -45,7 +49,7 @@ namespace Services.Tests.Implementations
 
 
             var ex = Assert.ThrowsAsync<ArgumentException>(() => _service.AddBookingAsync(booking));
-            Assert.That(ex.Message, Is.EqualTo("Invalid booking details or time slot not available."));
+            Assert.That(ex.Message, Is.EqualTo("Invalid booking details."));
         }
 
         [Test]

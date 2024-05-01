@@ -18,6 +18,8 @@ builder.Host.UseSerilog((context, configuration) => {
 
 // Add services to the container.
 builder.Services.Configure<BookingOptions>(builder.Configuration.GetSection("BookingOptions"));
+builder.Services.AddSingleton<IBookingOptionsService, BookingOptionsService>();
+builder.Services.AddScoped(typeof(IApiLogger<>), typeof(ApiLogger<>));
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddSingleton<IBookingRepository, BookingRepository>();
 

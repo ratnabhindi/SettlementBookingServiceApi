@@ -11,11 +11,11 @@ namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingController(IBookingService bookingService, IOptions<BookingOptions> bookingOptions, ILogger<BookingController> logger) : ControllerBase
+    public class BookingController(IBookingService bookingService, IBookingOptionsService bookingOptionsService, IApiLogger<BookingController> logger) : ControllerBase
     {
         private readonly IBookingService _bookingService = bookingService;
-        private readonly BookingOptions _bookingOptions = bookingOptions.Value;
-        private readonly ILogger<BookingController> _logger = logger;
+        private readonly IBookingOptionsService _bookingOptionsService = bookingOptionsService;
+        private readonly IApiLogger<BookingController> _logger = logger;
 
         [HttpPost]
         public async Task<IActionResult> CreateBookingAsync([FromBody] BookingRequest request)
@@ -38,17 +38,17 @@ namespace WebApi.Controllers
                 return BadRequest("Invalid time format. Please provide time in HH:mm format.");
             }
 
-            var bookingDateTime = DateTime.Today.Add(bookingTimeSpan);
+            DateTime bookingDateTime = DateTime.Today.Add(bookingTimeSpan);
             if (!IsBookingTimeValid(bookingDateTime))
             {
                 _logger.LogWarning("Booking time {BookingTime} is out of valid business hours.", bookingDateTime);
-                return BadRequest($"Booking time must be within business hours ({_bookingOptions.StartHour:h\\:mm} - {_bookingOptions.EndHour:h\\:mm}).");
+                return BadRequest($"Booking time must be within business hours ({_bookingOptionsService.GetBookingOptions().StartHour:h\\:mm} - {_bookingOptionsService.GetBookingOptions().EndHour:h\\:mm}).");
             }
 
             try
             {
-                var booking = new Booking { Name = request.Name, BookingTime = bookingDateTime };
-                var addedBooking = await _bookingService.AddBookingAsync(booking);
+                Booking booking = new() { Name = request.Name, BookingTime = bookingDateTime };
+                Booking addedBooking = await _bookingService.AddBookingAsync(booking);
                 _logger.LogInformation("Booking {BookingId} created successfully at {BookingTime}.", addedBooking.Id, bookingDateTime);
                 return Ok(new { bookingId = addedBooking.Id });
             }
@@ -61,8 +61,8 @@ namespace WebApi.Controllers
 
         private bool IsBookingTimeValid(DateTime bookingTime)
         {
-            TimeSpan lastValidStartTime = _bookingOptions.EndHour - _bookingOptions.BookingDuration;
-            return bookingTime.TimeOfDay >= _bookingOptions.StartHour && bookingTime.TimeOfDay <= lastValidStartTime;
+            TimeSpan lastValidStartTime = _bookingOptionsService.GetBookingOptions().EndHour - _bookingOptionsService.GetBookingOptions().BookingDuration;
+            return bookingTime.TimeOfDay >= _bookingOptionsService.GetBookingOptions().StartHour && bookingTime.TimeOfDay <= lastValidStartTime;
         }
     }
 }

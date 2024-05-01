@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace Services.Implementations
 {
-    public class BookingService(IBookingRepository bookingRepository, IOptions<BookingOptions> bookingOptions, ILogger<BookingService> logger) : IBookingService
+    public class BookingService(IBookingRepository bookingRepository, IBookingOptionsService bookingOptionsService, IApiLogger<BookingService> logger) : IBookingService
     {
         private readonly IBookingRepository _bookingRepository = bookingRepository;
-        private readonly BookingOptions _bookingOptions = bookingOptions.Value;
-        private readonly ILogger<BookingService> _logger = logger;
+        private readonly IBookingOptionsService _bookingOptionsService = bookingOptionsService;
+        private readonly IApiLogger<BookingService> _logger = logger;
 
         public async Task<Booking> AddBookingAsync(Booking booking)
         {
@@ -39,13 +39,13 @@ namespace Services.Implementations
 
         public async Task<bool> IsTimeSlotAvailableAsync(DateTime bookingTime)
         {
-          
-            _logger.LogDebug("Checking availability for the booking time: {bookingTime}", bookingTime);
+
+            _logger.LogInformation("Checking availability for the booking time: {bookingTime}", bookingTime);
 
             int bookingsAtThisTime = await _bookingRepository.GetBookingsCountAsync(bookingTime);
-            bool isAvailable = bookingsAtThisTime < _bookingOptions.MaxSimultaneousBookings;
+            bool isAvailable = bookingsAtThisTime < _bookingOptionsService.GetBookingOptions().MaxSimultaneousBookings;
          
-            _logger.LogDebug("Time slot availability at {BookingTime}: {IsAvailable}.", bookingTime, isAvailable);
+            _logger.LogInformation("Time slot availability at {BookingTime}: {IsAvailable}.", bookingTime, isAvailable);
             return isAvailable;
         }
     }
