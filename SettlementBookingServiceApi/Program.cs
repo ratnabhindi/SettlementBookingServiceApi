@@ -1,10 +1,20 @@
 using Configurations;
 using Domain.Interfaces;
 using Infrastructure.Repositories;
+using Serilog;
 using Services.Implementations;
 using Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+builder.Host.UseSerilog((context, configuration) => {
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File("Logs/SettlementBookingServiceApi.txt", rollingInterval: RollingInterval.Day);
+});
 
 // Add services to the container.
 builder.Services.Configure<BookingOptions>(builder.Configuration.GetSection("BookingOptions"));

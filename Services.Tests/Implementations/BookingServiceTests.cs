@@ -7,6 +7,8 @@ using Services.Implementations;
 using System;
 using System.Threading.Tasks;
 using Configurations;
+using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace Services.Tests.Implementations
 {
@@ -16,6 +18,7 @@ namespace Services.Tests.Implementations
         private BookingService _service;
         private Mock<IBookingRepository> _mockRepository;
         private BookingOptions _bookingOptions;
+        private Mock<ILogger<BookingService>> _mockLogger;
 
         [SetUp]
         public void SetUp()
@@ -27,9 +30,12 @@ namespace Services.Tests.Implementations
             _bookingOptions = new BookingOptions { MaxSimultaneousBookings = 3 };
             IOptions<BookingOptions> options = Options.Create(_bookingOptions);
 
+            // Setup Mock for ILogger
+            _mockLogger = new Mock<ILogger<BookingService>>();
+
             // Initialize BookingService with mocked dependencies
-            _service = new BookingService(_mockRepository.Object, options);
-        }
+            _service = new BookingService(_mockRepository.Object, options, (ILogger<BookingService>)_mockLogger);
+    }
 
         [Test]
         public void AddBookingAsync_Throws_ArgumentException_For_Invalid_Booking()

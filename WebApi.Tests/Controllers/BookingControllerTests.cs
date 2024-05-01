@@ -9,6 +9,8 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading.Tasks;
 using Configurations;
+using Microsoft.Extensions.Logging;
+using Services.Implementations;
 
 namespace WebApi.Tests.Controllers
 {
@@ -18,6 +20,7 @@ namespace WebApi.Tests.Controllers
         private BookingController _controller;
         private Mock<IBookingService> _mockBookingService;
         private BookingOptions _bookingOptions;
+        private Mock<ILogger<BookingService>> _mockLogger;
 
         [SetUp]
         public void Setup()
@@ -33,8 +36,11 @@ namespace WebApi.Tests.Controllers
             };
             IOptions<BookingOptions> options = Options.Create(_bookingOptions);
 
+            // Setup Mock for ILogger
+            _mockLogger = new Mock<ILogger<BookingService>>();
+
             // Initialize the controller with the mocked service and options
-            _controller = new BookingController(_mockBookingService.Object, options);
+            _controller = new BookingController(_mockBookingService.Object, options, (ILogger<BookingController>)_mockLogger);
         }
 
         [Test]
