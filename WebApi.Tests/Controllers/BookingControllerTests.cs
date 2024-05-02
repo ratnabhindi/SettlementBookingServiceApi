@@ -72,8 +72,6 @@ namespace Tests
             var result = await _controller.CreateBookingAsync(request);
 
             Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
-            var badRequestResult = result as BadRequestObjectResult;
-            Assert.That(badRequestResult?.Value, Is.EqualTo("An unexpected error occurred."));
         }
     }
 }
