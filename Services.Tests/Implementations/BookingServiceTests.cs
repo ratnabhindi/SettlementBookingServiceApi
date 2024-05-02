@@ -64,7 +64,7 @@ namespace Tests
         {
             var request = new BookingRequest { Name = "John Doe", BookingTime = "18:00" };
 
-            var ex = Assert.ThrowsAsync<BookingUnavailableException>(() => _bookingService.AddBookingAsync(request));
+            var ex = Assert.ThrowsAsync<InvalidOperationException>(() => _bookingService.AddBookingAsync(request));
             Assert.That(ex.Message, Is.EqualTo("Booking time must be within business hours (09:00 - 17:00)."));
             _mockLogger.Verify(l => l.LogWarning(It.IsAny<string>(), It.IsAny<object[]>()), Times.Once);
         }

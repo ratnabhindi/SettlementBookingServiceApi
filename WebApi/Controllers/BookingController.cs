@@ -36,7 +36,7 @@ namespace WebApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error occurred.");
-                return BadRequest("An unexpected error occurred.");
+                return BadRequest(ex.Message);
             }
         }
 

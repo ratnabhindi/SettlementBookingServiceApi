@@ -23,7 +23,7 @@ namespace Services.Implementations
             if (!IsBookingTimeValid(bookingTime))
             {
                 _logger.LogWarning("Booking time {BookingTime} is out of valid business hours.", bookingTime);
-                throw new BookingUnavailableException($"Booking time must be within business hours ({_bookingOptionsService.GetBookingOptions().StartHour:hh\\:mm} - {_bookingOptionsService.GetBookingOptions().EndHour:hh\\:mm}).");
+                throw new InvalidOperationException($"Booking time must be within business hours ({_bookingOptionsService.GetBookingOptions().StartHour:hh\\:mm} - {_bookingOptionsService.GetBookingOptions().EndHour:hh\\:mm}).");
             }
 
             if (!await IsTimeSlotAvailableAsync(bookingTime))
