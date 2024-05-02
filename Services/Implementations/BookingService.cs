@@ -1,12 +1,9 @@
 ﻿using Configurations;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Serilog;
+using Services.DTOs;
 using Services.Interfaces;
-using System;
-using System.Threading.Tasks;
 
 namespace Services.Implementations
 {
@@ -16,37 +13,45 @@ namespace Services.Implementations
         private readonly IBookingOptionsService _bookingOptionsService = bookingOptionsService;
         private readonly IApiLogger<BookingService> _logger = logger;
 
-        public async Task<Booking> AddBookingAsync(Booking booking)
+        public async Task<BookingResponse?> AddBookingAsync(BookingRequest request)
         {
-            if (booking == null || string.IsNullOrWhiteSpace(booking.Name))
+            if (string.IsNullOrEmpty(request.BookingTime) || string.IsNullOrEmpty(request.Name))            
+                return null;
+
+            
+            DateTime bookingTime = DateTime.Today.Add(TimeSpan.Parse(request.BookingTime));
+            if (!IsBookingTimeValid(bookingTime))
             {
-                _logger.LogWarning("Failed to add booking due to invalid input.");
-                throw new ArgumentException("Invalid booking details.");
+                _logger.LogWarning("Booking time {BookingTime} is out of valid business hours.", bookingTime);
+                throw new BookingUnavailableException($"Booking time must be within business hours ({_bookingOptionsService.GetBookingOptions().StartHour:hh\\:mm} - {_bookingOptionsService.GetBookingOptions().EndHour:hh\\:mm}).");
             }
 
-            if (!await IsTimeSlotAvailableAsync(booking.BookingTime))
+            if (!await IsTimeSlotAvailableAsync(bookingTime))
             {
-                _logger.LogWarning("Failed to add booking as no time slots are available.");
-                throw new ArgumentException("Time slot not available.");
+                _logger.LogWarning("Failed to add booking as no time slots are available at {BookingTime}.", bookingTime);
+                throw new BookingUnavailableException("Time slot not available.");
             }
 
-            booking.Id = Guid.NewGuid();
-            await _bookingRepository.AddBookingAsync(booking);          
+            var booking = new Booking { Name = request.Name, BookingTime = bookingTime, Id = Guid.NewGuid() };
+            await _bookingRepository.AddBookingAsync(booking);
+
             _logger.LogInformation("Booking {BookingId} added successfully.", booking.Id);
 
-            return booking;
+            return new BookingResponse { BookingId = booking.Id };
         }
 
-        public async Task<bool> IsTimeSlotAvailableAsync(DateTime bookingTime)
+        private bool IsBookingTimeValid(DateTime bookingTime)
         {
-
-            _logger.LogInformation("Checking availability for the booking time: {bookingTime}", bookingTime);
-
-            int bookingsAtThisTime = await _bookingRepository.GetBookingsCountAsync(bookingTime);
-            bool isAvailable = bookingsAtThisTime < _bookingOptionsService.GetBookingOptions().MaxSimultaneousBookings;
-         
-            _logger.LogInformation("Time slot availability at {BookingTime}: {IsAvailable}.", bookingTime, isAvailable);
-            return isAvailable;
+            BookingOptions options = _bookingOptionsService.GetBookingOptions();
+            TimeSpan lastValidStartTime = options.EndHour - options.BookingDuration;
+            return bookingTime.TimeOfDay >= options.StartHour && bookingTime.TimeOfDay <= lastValidStartTime;
         }
+
+        private async Task<bool> IsTimeSlotAvailableAsync(DateTime bookingTime)
+        {
+            int bookingsAtThisTime = await _bookingRepository.GetBookingsCountAsync(bookingTime);
+            return bookingsAtThisTime < _bookingOptionsService.GetBookingOptions().MaxSimultaneousBookings;
+        }
+
     }
 }
